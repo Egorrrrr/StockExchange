@@ -38,17 +38,18 @@ public class OrderEntryGateway {
 
     public void start() throws IOException {
 
+        HashMap<String, Client> clientAwaitingVerification = new HashMap<>();
+        HashMap<String, Client> clientMap = new HashMap<>();
+        ArrayList<String> loginQueue = new ArrayList<>();
         //запуск javalin
         JAVALIN = Javalin.create(JavalinConfig::enableCorsForAllOrigins).start(PORT);
 
         //считываем файл с инструментами и зансим их в словарь в классе MatchingEngine
         InputStream instrumentFile = new FileInputStream("src/main/java/ins.txt");
-        MatchingEngine matchingEngine = new MatchingEngine(readFromInputStream(instrumentFile));
+        MatchingEngine matchingEngine = new MatchingEngine(readFromInputStream(instrumentFile),clientMap);
 
 
-        HashMap<String, Client> clientAwaitingVerification = new HashMap<>();
-        HashMap<String, Client> clientMap = new HashMap<>();
-        ArrayList<String> loginQueue = new ArrayList<>();
+
 
         System.out.println(matchingEngine.makeSnapshot().toString());
 

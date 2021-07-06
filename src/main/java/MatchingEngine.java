@@ -10,11 +10,13 @@ import java.util.HashMap;
 public class MatchingEngine {
 
     public HashMap<String, Instrument> instrumentMap;
+    HashMap<String, Client> clientMap;
+
     public static int ID = 0;
-    public MatchingEngine(HashMap<String, Instrument> instrumentMap){
+    public MatchingEngine(HashMap<String, Instrument> instrumentMap,HashMap<String, Client> clientMap ){
 
         this.instrumentMap = instrumentMap;
-
+        this.clientMap = clientMap;
     }
 
     private static Integer tryParseInt(String value, Context ctx) {
@@ -62,6 +64,7 @@ public class MatchingEngine {
                 instrument.orderBookSell.add(order);
 
             }
+            SenderSSE.SendMarketSnapshot(makeSnapshot(), clientMap.values());
         }
         else{
 
@@ -106,7 +109,7 @@ public class MatchingEngine {
                 orderData.put("price", orderBuy.price);
                 orderData.put("instrument", orderBuy.instrument.name);
                 orderData.put("qty", orderBuy.qty);
-                sellOrders.put(orderBuy.id.toString(), orderData);
+                buyOrders.put(orderBuy.id.toString(), orderData);
             }
             orders.put("buyOrders", buyOrders);
             orders.put("sellOrders", sellOrders);
