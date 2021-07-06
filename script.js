@@ -1,5 +1,27 @@
 const IP = "http://localhost:3001";
+var market;
 var code = null;
+var inst;
+
+function makeOrder(e){
+  var side = e ? "BUY" : "SELL" ;
+  var price = document.getElementById("price").value
+  var qty = document.getElementById("qty").value
+  
+  fetch(IP+"/new-order-single",{
+    method: 'POST',
+    body:JSON.stringify({code: code, side:side, price:price, qty:qty, instrument:inst})
+  })
+  .then((response) => {
+    alert(response.status)
+
+  })
+  .then((data) => {
+    
+  })
+
+}
+
 
 function login(){
    var name = document.getElementById("loginname").value;
@@ -19,18 +41,77 @@ function login(){
   
     
 }
+function printOrderBook(e){
+  var isntname = document.getElementById("inst");
+  isntname.innerHTML = "INS:"+ e.target.innerHTML;
+  inst = e.target.innerHTML;
+
+
+}
+
+function restoreTable(){
+  var table = document.getElementById("tableone");
+  table.innerHTML = "";
+
+  var instheader = document.createElement("th");
+  var sellheader = document.createElement("th");
+  var buyheader = document.createElement("th");
+  instheader.innerHTML = "INSTRUMENT"
+  sellheader.innerHTML = "SELL"
+  buyheader.innerHTML = "BUY"
+  table.append(instheader)
+  table.append(sellheader)  
+  table.append(buyheader)  
+}
 
 if(document.location.toString().includes("index")){
 
-    var msgEvent = new EventSource(IP + "/sse")
+    var flag = true
+    if(flag){
+      var msgEvent = new EventSource(IP + "/sse")
 
-    msgEvent.addEventListener("connected", msg =>{
-        code = msg.data;
-        var name = Cookies.getCookie("name");
-        var req = new XMLHttpRequest();
-        req.open("POST", IP + "/verify");
-        req.send(JSON.stringify({name:name, code:code}));
+      msgEvent.addEventListener("connected", msg =>{
+          code = msg.data;
+          var name = Cookies.getCookie("name");
+          var req = new XMLHttpRequest();
+          req.open("POST", IP + "/verify");
+          req.send(JSON.stringify({name:name, code:code}));
+      });
+      msgEvent.addEventListener("marketSnapshot", msg =>{
+
+        var marketSnapshot = JSON.parse(msg.data)
+        market = marketSnapshot;
+        restoreTable();
+        for (const [key, value] of Object.entries(marketSnapshot.instruments)) {
+          console.log(key, value);
+
+          
+          if(inst = key){
+            var selltable = document.getElementById("")
+            for(const[keysellord, valsellord] of Object.entries(value.sellOrders)){
+              
+            }
+            for(const[keybuyord, valbuyord] of Object.entries(value.buyOrders)){
+              
+            }
+          }
+
+          var table = document.getElementById("tableone");
+
+          var instheader = document.createElement("th");
+          var sellheader = document.createElement("th");
+          var buyheader = document.createElement("th");
+          table.append  
+          var tr = document.createElement("tr");
+          var td = document.createElement("td");
+          td.innerHTML = key;
+          td.onclick = printOrderBook;
+          tr.appendChild(td);
+          table.appendChild(tr);
+        }        
     });
+    flag= false
+  }
 }
 
 

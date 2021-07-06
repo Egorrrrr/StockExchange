@@ -92,16 +92,86 @@ table{
     margin-right: 10%;
 }
 
-.orderBook{
+.orderfunc{
     width: 100%;
     height: 100%;
+    display: flex;
+    flex-direction: column;
+    
+
+}
+
+.orderfooter{
+    height: 5%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.orderBook{
+    width: 100%;
+    height: 95%;
     display: flex;
     flex-direction: row;
     
 }
 
+.buybtn{
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 25%;
+    border-width: 1px;
+    border-style: solid;
+    border-color: green;
+    color: green;
+}
+.pos{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 25%;
+    border-width: 1px;
+    border-style: solid;
+    border-color: green;
+    color: green;
+}
+
+.qtyinp{
+    width: 25%;
+}
+
+
+.sellbtn{
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 25%;
+    border-width: 1px;
+    border-style: solid;
+    border-color: green;
+    color: green;
+}
+
+.btn:hover{
+    cursor: pointer;
+    color: lightgreen;
+}
+
+.qtyinput{
+    padding: 0;
+    margin: 0;
+    text-align: center;
+    height: 100%;
+    width: 100%;
+}
+
 tr:hover{
     cursor: pointer;
+    
+    color: lightgreen;
 }
 
 tr{
@@ -166,6 +236,8 @@ input{
 
 .login:hover{
     cursor: pointer;
+    
+    color: lightgreen;
 }
 .login{
     color: green;

@@ -10,29 +10,20 @@
 <body>
     <div class="menu">
         <div class="instrumentContainer">
-            <table>
+            <table id="tableone">
                 <th>ISNTRUMENT</th>
                 <th>SELL</th>
                 <th>BUY</th>
             </tr>
-            <tr>
-                <td>Potato</td>
-                <td>40</td>
-                <td>50</td>
-            </tr>
-            <tr>
-                <td>Carrot</td>
-                <td>30</td>
-                <td>40</td>
-            </tr>
-            
             </table>
         </div>
+        <div class="orderfunc">
         <div class="orderBook">
             <div class="sell">
                 <div class="sellheader">SELL</div>
-                <div class="selltable">
+                <div class="selltable" id="selltab">
                     <div class="order">
+                        <div class="price">#5</div>
                         <div class="price">$50</div>
                         <div class="qty">17</div>
                     </div>
@@ -41,17 +32,29 @@
             <div class="buy">
                 <div class="buyheader">BUY</div>
                 
-                <div class="buytable">
+                <div class="buytable" id="buytab">
                     <div class="order">
                         <div class="price">$50</div>
                         <div class="qty">17</div>
                     </div>
 
-                </div>
+                </div>     
 
             </div>
-
+    </div>
+    <div class="orderfooter">
+        <div class="pos" id="inst">INS:</div>
+        <div class="qtyinp">
+            <input type="text" placeholder="qty" id="qty" class="qtyinput">
         </div>
+        <div class="qtyinp">
+            <input type="text" placeholder="price" id="price" class="qtyinput">
+        </div>
+        <div class="buybtn btn" onclick="makeOrder(true)">BUY</div>
+        <div class="sellbtn btn" onclick="makeOrder(false)">SELL</div>
+    </div>
+
+</div>
     </div>
 
 </body>
