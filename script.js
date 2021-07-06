@@ -13,7 +13,7 @@ function makeOrder(e){
     body:JSON.stringify({code: code, side:side, price:price, qty:qty, instrument:inst})
   })
   .then((response) => {
-    alert(response.status)
+    
 
   })
   .then((data) => {
@@ -41,10 +41,68 @@ function login(){
   
     
 }
+
+var targetcolor;
 function printOrderBook(e){
+  if(targetcolor != null){
+    targetcolor.style.color = "green"
+  }
+  targetcolor = e.target
+  e.target.style.color = "white";
   var isntname = document.getElementById("inst");
   isntname.innerHTML = "INS:"+ e.target.innerHTML;
   inst = e.target.innerHTML;
+  var selltable = document.getElementById("selltab")
+  var buytable = document.getElementById("buytab")
+  selltable.innerHTML = "";
+  buytable.innerHTML = "";
+  
+  for(const[keysellord, valsellord] of Object.entries(market.instruments[inst].sellOrders)){
+
+    var order = document.createElement("div");
+    order.className = "order"
+
+    var id = document.createElement("div");
+    id.className = "id"
+    id.innerHTML = "#" + keysellord;
+
+    var price = document.createElement("div");
+    price.className = "price";
+    price.innerHTML = "$" + valsellord.price;
+
+    var qty = document.createElement("div");
+    qty.className = "qty";
+    qty.innerHTML = valsellord.qty;
+
+    order.appendChild(id);
+    order.appendChild(price);
+    order.appendChild(qty);
+    selltable.appendChild(order)
+    
+  }
+  for(const[keybuyord, valbuyord] of Object.entries(market.instruments[inst].buyOrders)){
+    
+    var order = document.createElement("div");
+    order.className = "order"
+
+    var id = document.createElement("div");
+    id.className = "id"
+    id.innerHTML = "#" + keybuyord;
+
+    var price = document.createElement("div");
+    price.className =  price;
+    price.innerHTML = "$" + valbuyord.price;
+
+    var qty = document.createElement("div");
+    qty.className = "qty";
+    qty.innerHTML = valbuyord.qty;
+
+    order.appendChild(id);
+    order.appendChild(price);
+    order.appendChild(qty);
+    buytable.appendChild(order)
+  }
+
 
 
 }
@@ -86,13 +144,56 @@ if(document.location.toString().includes("index")){
           console.log(key, value);
 
           
-          if(inst = key){
-            var selltable = document.getElementById("")
+          if(inst == key){
+            var selltable = document.getElementById("selltab")
+            var buytable = document.getElementById("buytab")
+            selltable.innerHTML = "";
+            buytable.innerHTML = "";
+            
             for(const[keysellord, valsellord] of Object.entries(value.sellOrders)){
+
+              var order = document.createElement("div");
+              order.className = "order"
+
+              var id = document.createElement("div");
+              id.className = "id"
+              id.innerHTML = "#" + keysellord;
+
+              var price = document.createElement("div");
+              price.className = "price";
+              price.innerHTML = "$" + valsellord.price;
+
+              var qty = document.createElement("div");
+              qty.className = "qty";
+              qty.innerHTML = valsellord.qty;
+
+              order.appendChild(id);
+              order.appendChild(price);
+              order.appendChild(qty);
+              selltable.appendChild(order)
               
             }
             for(const[keybuyord, valbuyord] of Object.entries(value.buyOrders)){
               
+              var order = document.createElement("div");
+              order.className = "order"
+
+              var id = document.createElement("div");
+              id.className = "id"
+              id.innerHTML = "#" + keybuyord;
+
+              var price = document.createElement("div");
+              price.className = "price";
+              price.innerHTML = "$" + valbuyord.price;
+
+              var qty = document.createElement("div");
+              qty.className = "qty";
+              qty.innerHTML = valbuyord.qty;
+
+              order.appendChild(id);
+              order.appendChild(price);
+              order.appendChild(qty);
+              buytable.appendChild(order)
             }
           }
 
