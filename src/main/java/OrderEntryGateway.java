@@ -3,6 +3,7 @@ import io.javalin.core.JavalinConfig;
 import io.javalin.http.sse.SseClient;
 import org.json.JSONObject;
 
+import java.io.*;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,24 +21,36 @@ public class OrderEntryGateway {
     }
 
 
+    private HashMap<String, Instrument> readFromInputStream(InputStream inputStream)
+            throws IOException {
+        HashMap<String, Instrument> instrumentHashMap = new HashMap<>();
+        StringBuilder resultStringBuilder = new StringBuilder();
+        try (BufferedReader br
+                     = new BufferedReader(new InputStreamReader(inputStream))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                Instrument instrument = new Instrument(line);
+                instrumentHashMap.put(line, instrument);
+            }
+        }
+        return instrumentHashMap;
+    }
 
-    public void start(){
+    public void start() throws IOException {
 
+        //запуск javalin
         JAVALIN = Javalin.create(JavalinConfig::enableCorsForAllOrigins).start(PORT);
 
-        HashMap<String, Client> clientAwaitingVerification = new HashMap<>();
+        //считываем файл с инструментами и зансим их в словарь в классе MatchingEngine
+        InputStream instrumentFile = new FileInputStream("src/main/java/ins.txt");
+        MatchingEngine matchingEngine = new MatchingEngine(readFromInputStream(instrumentFile));
 
+
+        HashMap<String, Client> clientAwaitingVerification = new HashMap<>();
         HashMap<String, Client> clientMap = new HashMap<>();
         ArrayList<String> loginQueue = new ArrayList<>();
 
-        HashMap<String, Instrument> instrumentMap = new HashMap<>();
-
-        Instrument potato = new Instrument("Картошка");
-        instrumentMap.put(potato.name, potato);
-        Instrument carrot = new Instrument("Морковь");
-        instrumentMap.put(carrot.name, carrot);
-
-        MatchingEngine matchingEngine = new MatchingEngine(instrumentMap);
+        System.out.println(matchingEngine.makeSnapshot().toString());
 
         JAVALIN.post("/new-order-single", matchingEngine::processNewOrder);
         JAVALIN.post("/order-cancel-request", matchingEngine::cancelOrder);
@@ -45,7 +58,6 @@ public class OrderEntryGateway {
 
         JAVALIN.post("/login",client ->{
 
-            String code = getRandomNumber(0, 15000).toString();
             JSONObject loginData = new JSONObject(client.body());
             String id = loginData.getString("username");
             loginQueue.add(id);
@@ -58,15 +70,18 @@ public class OrderEntryGateway {
             String id  = clientVerificationData.getString("name");
             String code = clientVerificationData.getString("code");
             if(loginQueue.contains(id)){
+
                 System.out.println("verified");
                 Client verifiedClient = clientAwaitingVerification.get(code);
+                System.out.println(verifiedClient.code);
                 clientMap.put(code, verifiedClient);
+                verifiedClient.sseClient.sendEvent("marketSnapshot",matchingEngine.makeSnapshot().toString());
             }
+
             
         });
 
         JAVALIN.sse("/sse",client ->{
-            System.out.println("yes");
             String code = getRandomNumber(0, 15000).toString();
             Client unverifiedClient = new Client(client, code);
             clientAwaitingVerification.put(code, unverifiedClient);

@@ -7,6 +7,8 @@ public class Client {
     public String id;
     public Client(SseClient sseClient, String code){
 
+        this.sseClient = sseClient;
+        this.code = code;
 
 
     }

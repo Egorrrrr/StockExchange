@@ -4,12 +4,13 @@ import org.jetbrains.annotations.NotNull;
 import org.json.HTTP;
 import org.json.JSONObject;
 
+import java.awt.*;
 import java.util.HashMap;
 
 public class MatchingEngine {
 
     public HashMap<String, Instrument> instrumentMap;
-
+    public static int ID = 0;
     public MatchingEngine(HashMap<String, Instrument> instrumentMap){
 
         this.instrumentMap = instrumentMap;
@@ -37,6 +38,7 @@ public class MatchingEngine {
 
     public void processNewOrder(@NotNull Context ctx){
 
+        System.out.println(ctx.body());
         JSONObject jsonOrder = new JSONObject(ctx.body());
 
         Instrument instrument = instrumentMap.get(jsonOrder.getString("instrument"));
@@ -50,17 +52,19 @@ public class MatchingEngine {
         double price = tryParseDouble(priceString, ctx);
 
         if(qty > 0 && price > 0 && instrument != null ) {
-            Order order = new Order(instrument, side, price, qty);
+            Order order = new Order(instrument, side, price, qty, ++ID);
             if(side.equals(SideEnum.BUY)){
+                System.out.println("buy");
                 instrument.orderBookBuy.add(order);
             }
             if(side.equals(SideEnum.SELL)){
-
+                System.out.println("sell");
                 instrument.orderBookSell.add(order);
 
             }
         }
         else{
+
             ctx.result("Wrong price or quantity");
         }
 
@@ -69,8 +73,49 @@ public class MatchingEngine {
     public void cancelOrder(@NotNull Context ctx){
 
 
-
     }
 
+    public JSONObject makeSnapshot(){
+
+        JSONObject entireSnapshot = new JSONObject();
+        JSONObject instruments = new JSONObject();
+
+        for (Instrument instrument : instrumentMap.values()
+             ){
+
+            JSONObject orders = new JSONObject();
+
+            JSONObject sellOrders = new JSONObject();
+            for (Order orderSell: instrument.orderBookSell
+                 ) {
+                JSONObject orderData = new JSONObject();
+                orderData.put("id", orderSell.id);
+                orderData.put("side", orderSell.sideEnum);
+                orderData.put("price", orderSell.price);
+                orderData.put("instrument", orderSell.instrument.name);
+                orderData.put("qty", orderSell.qty);
+                sellOrders.put(orderSell.id.toString(), orderData);
+            }
+
+            JSONObject buyOrders = new JSONObject();
+            for (Order orderBuy: instrument.orderBookBuy
+                 ) {
+                JSONObject orderData = new JSONObject();
+                orderData.put("id", orderBuy.id);
+                orderData.put("side", orderBuy.sideEnum);
+                orderData.put("price", orderBuy.price);
+                orderData.put("instrument", orderBuy.instrument.name);
+                orderData.put("qty", orderBuy.qty);
+                sellOrders.put(orderBuy.id.toString(), orderData);
+            }
+            orders.put("buyOrders", buyOrders);
+            orders.put("sellOrders", sellOrders);
+            instruments.put(instrument.name, orders);
+
+        }
+        entireSnapshot.put("instruments",instruments);
+
+        return entireSnapshot;
+    }
 
 }
