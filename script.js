@@ -1,9 +1,9 @@
-const IP = "localhost:3001";
+const IP = "http://localhost:3001";
 var code = null;
 
 function login(){
    var name = document.getElementById("loginname").value;
-   
+   Cookies.setCookie("name", name);
    var pass = document.getElementById("pass").value;
    fetch(IP+"/login",{
     method: 'POST',
@@ -20,15 +20,16 @@ function login(){
     
 }
 
-if(document.location.toString().includes("chat")){
+if(document.location.toString().includes("index")){
 
-    var msgEvent = new EventSource(Cookies.getCookie("Ip") + "/sse")
+    var msgEvent = new EventSource(IP + "/sse")
 
     msgEvent.addEventListener("connected", msg =>{
         code = msg.data;
+        var name = Cookies.getCookie("name");
         var req = new XMLHttpRequest();
-        req.open("POST", IP + "/check-in");
-        req.send(code);
+        req.open("POST", IP + "/verify");
+        req.send(JSON.stringify({name:name, code:code}));
     });
 }
 
