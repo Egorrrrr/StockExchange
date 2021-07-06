@@ -39,7 +39,6 @@ public class MatchingEngine {
 
         JSONObject jsonOrder = new JSONObject(ctx.body());
 
-
         Instrument instrument = instrumentMap.get(jsonOrder.getString("instrument"));
 
         SideEnum side =  jsonOrder.getEnum(SideEnum.class, "side");
