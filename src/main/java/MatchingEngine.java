@@ -1,9 +1,11 @@
 import io.javalin.http.Context;
+import io.javalin.http.util.JsonEscapeUtil;
 import org.eclipse.jetty.http.HttpStatus;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 
@@ -64,11 +66,11 @@ public class MatchingEngine {
             temp.associatedOrders.add(order);
             if(side.equals(SideEnum.BUY)){
                 instrument.orderBookBuy.put(OFFERID.toString(),order);
-                findMatchBuy(instrument, order);
+                findMatchBuy(instrument, order, side);
             }
             if(side.equals(SideEnum.SELL)){
                 instrument.orderBookSell.put(OFFERID.toString(),order);
-                findMatchSell(instrument, order);
+                findMatchBuy(instrument, order, side);
 
             }
             SenderSSE.SendMarketSnapshot(makeSnapshot(), traderHashMap.values());
@@ -247,17 +249,17 @@ public class MatchingEngine {
 
 
 
-    public void findMatchBuy(Instrument instrument, Order order){
+    public void findMatchBuy(Instrument instrument, Order order, SideEnum side){
 
         ArrayList<Order> matchingOrders =new ArrayList<>();
         double priceToLookFor = order.price;
         Integer qty = order.qty;
-        Integer totalQty = 0;
-        for (Order orderToCheck: instrument.orderBookSell.values()
+        HashMap<String,Order>  yourBook = side.equals(SideEnum.BUY) ? instrument.orderBookSell : instrument.orderBookBuy;
+        HashMap<String,Order>  othersBook = side.equals(SideEnum.BUY) ? instrument.orderBookBuy : instrument.orderBookSell;
+        for (Order orderToCheck: yourBook.values()
         ) {
             if(orderToCheck.price == priceToLookFor){
                 matchingOrders.add(orderToCheck);
-                totalQty += orderToCheck.qty;
             }
         }
         matchingOrders.sort(new QtySorter());
@@ -268,7 +270,7 @@ public class MatchingEngine {
         ) {
             if(qty- matchOrder.qty >= 0) {
                 qty -= matchOrder.qty;
-                instrument.orderBookSell.remove(matchOrder.id.toString());
+                yourBook.remove(matchOrder.id.toString());
                 matchOrder.trader.associatedOrders.remove(matchOrder);
                 Trade trade = new Trade(matchOrder, matchOrder.qty, ++TRADEID);
                 matchOrder.trader.associatedTrades.add(trade);
@@ -277,6 +279,7 @@ public class MatchingEngine {
                 if(qty == 0){
                     endMatching(instrument, order);
                     sendTradeAndOrders(order);
+                    break;
                 }
                 if(i == length-1){
                     Trade tradeSender = new Trade(order, order.qty - qty, ++TRADEID);
@@ -293,7 +296,7 @@ public class MatchingEngine {
                 matchOrder.trader.associatedTrades.add(trade);
                 Trade tradeForSender = new Trade(order, order.qty, ++TRADEID);
                 order.trader.associatedTrades.add(tradeForSender);
-                instrument.orderBookBuy.remove(order.id.toString());
+                othersBook.remove(order.id.toString());
                 order.trader.associatedOrders.remove(order);
                 SenderSSE.SendMarketSnapshot(makeSnapshot(), traderHashMap.values());
 
@@ -310,6 +313,7 @@ public class MatchingEngine {
 
     }
     public void endMatching(Instrument instrument, Order order){
+
         if(order.sideEnum == SideEnum.SELL)
             instrument.orderBookSell.remove(order.id.toString());
         else
