@@ -65,7 +65,7 @@ public class OrderEntryGateway {
             String id = loginData.getString("username");
             loginQueue.add(id);
             if(!traderMap.containsKey(id)) {
-                System.out.println("newguymade");
+
                 Trader trader = new Trader(id);
                 traderMap.put(id, trader);
             }

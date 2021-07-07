@@ -124,7 +124,6 @@ public class MatchingEngine {
     }
 
     public JSONObject getOnesOrders(Trader trader){
-        System.out.println("there?");
         JSONObject traderOrders = new JSONObject();
         for (Order order: trader.associatedOrders
              ) {
