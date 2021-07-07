@@ -22,6 +22,27 @@ function makeOrder(e){
 
 }
 
+function cancelOrder(e){
+  
+  var data = e.target.parentNode;
+  var id = data.childNodes[0].innerHTML.substring(1, data.childNodes[0].length)
+  var instr = data.childNodes[1].innerHTML
+  var side = data.childNodes[2].innerHTML  
+  fetch(IP+"/order-cancel-request",{
+    method: 'POST',
+    body:JSON.stringify({code: code, side:side, instrument:instr, id:id})
+  })
+  .then((response) => {
+    
+
+  })
+  .then((data) => {
+    
+  })
+
+}
+
+
 
 function login(){
    var name = document.getElementById("loginname").value;
@@ -170,6 +191,7 @@ if(document.location.toString().includes("index")){
           var cancel = document.createElement("div");
           cancel.className = "cancel ur";
           cancel.innerHTML = "X"
+          cancel.onclick = cancelOrder;
 
           myorder.appendChild(id);
           myorder.appendChild(urinst);
@@ -221,6 +243,7 @@ if(document.location.toString().includes("index")){
               selltable.appendChild(order)
               
             }
+
             for(const[keybuyord, valbuyord] of Object.entries(value.buyOrders)){
               
               var order = document.createElement("div");
@@ -244,27 +267,52 @@ if(document.location.toString().includes("index")){
               buytable.appendChild(order)
             }
           }
-
+          var maxSell = bestSell(value);
+          var minBuy = bestBuy(value);
           var table = document.getElementById("tableone");
-
-          var instheader = document.createElement("th");
-          var sellheader = document.createElement("th");
-          var buyheader = document.createElement("th");
-          table.append  
           var tr = document.createElement("tr");
           var td = document.createElement("td");
+          var tdsell = document.createElement("td");
+          tdsell.innerHTML = maxSell;
+          var tdbuy = document.createElement("td");
+          tdbuy.innerHTML = minBuy;
+
           td.innerHTML = key;
           td.onclick = printOrderBook;
           tr.appendChild(td);
+          tr.appendChild(tdsell);
+          tr.appendChild(tdbuy)
           table.appendChild(tr);
+
         }        
     });
     flag= false
   }
 }
 
+function bestSell(instrument){
 
+  var pricesArray = [];
+  for (const [key, value] of Object.entries(instrument.sellOrders)) {
+    pricesArray.push(value.price)
 
+  }
+  var result = Math.max(...pricesArray)
+  return isFinite(result) ? result : "-" 
+
+}
+function bestBuy(instrument){
+
+  var pricesArray = [];
+  for (const [key, value] of Object.entries(instrument.buyOrders)) {
+    pricesArray.push(value.price)
+
+  }
+  
+  var result = Math.min(...pricesArray)
+  return isFinite(result) ? result : "-" 
+
+}
 
 
 
