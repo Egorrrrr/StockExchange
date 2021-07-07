@@ -23,7 +23,12 @@ public class Trader {
         }
     }
 
-    public void sendOrderEvent(){
+    public void sendOrderEvent(String event, JSONObject data){
+
+        for (Client cl: associatedClients
+             ) {
+            cl.sseClient.sendEvent(event, data.toString());
+        }
 
     }
 

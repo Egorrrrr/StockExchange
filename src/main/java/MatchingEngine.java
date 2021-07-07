@@ -58,19 +58,18 @@ public class MatchingEngine {
         if(qty > 0 && price > 0 && instrument != null ) {
             Trader temp = traderBySseCodeMap.get(code);
             Order order = new Order(instrument, side, price, qty, ++ID, temp);
+            temp.associatedOrders.add(order);
             if(side.equals(SideEnum.BUY)){
-                System.out.println("buy");
                 instrument.orderBookBuy.add(order);
             }
             if(side.equals(SideEnum.SELL)){
-                System.out.println("sell");
                 instrument.orderBookSell.add(order);
 
             }
             SenderSSE.SendMarketSnapshot(makeSnapshot(), traderHashMap.values());
         }
         else{
-
+            ctx.status(HttpStatus.BAD_REQUEST_400);
             ctx.result("Wrong price or quantity");
         }
 
@@ -124,7 +123,20 @@ public class MatchingEngine {
         return entireSnapshot;
     }
 
-    public void getOnesOrders(Trader trader){
+    public JSONObject getOnesOrders(Trader trader){
+        System.out.println("there?");
+        JSONObject traderOrders = new JSONObject();
+        for (Order order: trader.associatedOrders
+             ) {
+            JSONObject orderData = new JSONObject();
+            orderData.put("id", order.id);
+            orderData.put("side", order.sideEnum);
+            orderData.put("price", order.price);
+            orderData.put("instrument", order.instrument.name);
+            orderData.put("qty", order.qty);
+            traderOrders.put(order.id.toString(), orderData);
+        }
+        return traderOrders;
 
     }
 

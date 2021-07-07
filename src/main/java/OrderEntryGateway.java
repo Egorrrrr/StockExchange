@@ -64,9 +64,11 @@ public class OrderEntryGateway {
             JSONObject loginData = new JSONObject(client.body());
             String id = loginData.getString("username");
             loginQueue.add(id);
-            Trader trader = new Trader(id);
-            traderMap.put(id, trader);
-
+            if(!traderMap.containsKey(id)) {
+                System.out.println("newguymade");
+                Trader trader = new Trader(id);
+                traderMap.put(id, trader);
+            }
 
 
         });
@@ -78,11 +80,11 @@ public class OrderEntryGateway {
             if(loginQueue.contains(id)){
 
                 Client verifiedClient = clientAwaitingVerification.get(code);
-
                 Trader temp = traderMap.get(id);
                 temp.associatedClients.add(verifiedClient);
                 traderBySseCode.put(code, temp);
                 verifiedClient.sseClient.sendEvent("marketSnapshot",matchingEngine.makeSnapshot().toString());
+                temp.sendOrderEvent("receiveOrders", matchingEngine.getOnesOrders(temp));
             }
 
             
