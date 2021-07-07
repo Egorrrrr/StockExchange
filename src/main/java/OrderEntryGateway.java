@@ -53,7 +53,6 @@ public class OrderEntryGateway {
 
 
 
-        System.out.println(matchingEngine.makeSnapshot().toString());
 
         JAVALIN.post("/new-order-single", matchingEngine::processNewOrder);
         JAVALIN.post("/order-cancel-request", matchingEngine::cancelOrder);

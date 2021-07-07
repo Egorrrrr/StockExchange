@@ -12,7 +12,7 @@ public class MatchingEngine {
     HashMap<String, Trader> traderHashMap;
     HashMap<String, Trader> traderBySseCodeMap;
 
-    public static int ID = 0;
+    public static Integer ID = 0;
     public MatchingEngine(HashMap<String, Instrument> instrumentMap,HashMap<String, Trader> traderMap, HashMap<String, Trader> traderBySseCodeMap  ){
 
         this.instrumentMap = instrumentMap;
@@ -41,7 +41,6 @@ public class MatchingEngine {
 
     public void processNewOrder(@NotNull Context ctx){
 
-        System.out.println(ctx.body());
         JSONObject jsonOrder = new JSONObject(ctx.body());
         String code = jsonOrder.getString("code");
 
@@ -60,13 +59,14 @@ public class MatchingEngine {
             Order order = new Order(instrument, side, price, qty, ++ID, temp);
             temp.associatedOrders.add(order);
             if(side.equals(SideEnum.BUY)){
-                instrument.orderBookBuy.add(order);
+                instrument.orderBookBuy.put(ID.toString(),order);
             }
             if(side.equals(SideEnum.SELL)){
-                instrument.orderBookSell.add(order);
+                instrument.orderBookSell.put(ID.toString(),order);
 
             }
             SenderSSE.SendMarketSnapshot(makeSnapshot(), traderHashMap.values());
+            temp.sendOrderEvent("receiveOrders" , getOnesOrders(temp));
         }
         else{
             ctx.status(HttpStatus.BAD_REQUEST_400);
@@ -77,6 +77,27 @@ public class MatchingEngine {
 
     public void cancelOrder(@NotNull Context ctx){
 
+        JSONObject cancellationData = new JSONObject(ctx.body());
+        String code = cancellationData.getString("code");
+        Trader trader = traderBySseCodeMap.get(code);
+        SideEnum side = cancellationData.getEnum(SideEnum.class, "side");
+        String id = cancellationData.getString("id");
+
+        Instrument instrument = instrumentMap.get(cancellationData.getString("instrument"));
+        Order orderToCancel;
+        if(side == SideEnum.BUY){
+            orderToCancel = instrument.orderBookBuy.get(id);
+            instrument.orderBookBuy.remove(id);
+
+        }
+        else {
+            orderToCancel = instrument.orderBookSell.get(id);
+            instrument.orderBookSell.remove(id);
+        }
+        trader.associatedOrders.remove(orderToCancel);
+        orderToCancel = null;
+        SenderSSE.SendMarketSnapshot(makeSnapshot(), traderHashMap.values());
+        trader.sendOrderEvent("receiveOrders" , getOnesOrders(trader));
 
     }
 
@@ -91,7 +112,7 @@ public class MatchingEngine {
             JSONObject orders = new JSONObject();
 
             JSONObject sellOrders = new JSONObject();
-            for (Order orderSell: instrument.orderBookSell
+            for (Order orderSell: instrument.orderBookSell.values()
                  ) {
                 JSONObject orderData = new JSONObject();
                 orderData.put("id", orderSell.id);
@@ -103,7 +124,7 @@ public class MatchingEngine {
             }
 
             JSONObject buyOrders = new JSONObject();
-            for (Order orderBuy: instrument.orderBookBuy
+            for (Order orderBuy: instrument.orderBookBuy.values()
                  ) {
                 JSONObject orderData = new JSONObject();
                 orderData.put("id", orderBuy.id);
