@@ -242,12 +242,17 @@ table{
     color: lightgreen;
 }
 
+.labqty{
+    margin-left: 3%;
+}
+
+
 .qtyinput{
     padding: 0;
     margin: 0;
     text-align: center;
     height: 100%;
-    width: 100%;
+    width: 47%;
 }
 
 tr:hover{
