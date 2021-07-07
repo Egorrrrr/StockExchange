@@ -5,7 +5,7 @@ public class Order {
     public Instrument instrument;
     public SideEnum sideEnum;
     public double price;
-    public int qty;
+    public Integer qty;
     public Trader trader;
     public Integer id;
     public Order(Instrument instrument, SideEnum sideEnum, double price, int qty, int id, Trader trader){

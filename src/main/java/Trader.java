@@ -8,17 +8,18 @@ public class Trader {
     public String name;
     public ArrayList<Client> associatedClients;
     public ArrayList<Order> associatedOrders;
+    public ArrayList<Trade> associatedTrades;
 
     public Trader(String name){
         associatedClients = new ArrayList<>();
         associatedOrders= new ArrayList<>();
+        associatedTrades = new ArrayList<>();
         this.name = name;
     }
 
     public void sendSseMarketSnapshot(JSONObject snapshot){
         for (Client cl: associatedClients
         ) {
-            System.out.println("here?");
             cl.sseClient.sendEvent("marketSnapshot", snapshot.toString());
         }
     }

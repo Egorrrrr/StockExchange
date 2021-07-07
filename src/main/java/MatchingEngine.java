@@ -3,6 +3,8 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 
 public class MatchingEngine {
@@ -12,7 +14,8 @@ public class MatchingEngine {
     HashMap<String, Trader> traderHashMap;
     HashMap<String, Trader> traderBySseCodeMap;
 
-    public static Integer ID = 0;
+    public static Integer OFFERID = 0;
+    public static Integer TRADEID = 0;
     public MatchingEngine(HashMap<String, Instrument> instrumentMap,HashMap<String, Trader> traderMap, HashMap<String, Trader> traderBySseCodeMap  ){
 
         this.instrumentMap = instrumentMap;
@@ -56,13 +59,16 @@ public class MatchingEngine {
 
         if(qty > 0 && price > 0 && instrument != null ) {
             Trader temp = traderBySseCodeMap.get(code);
-            Order order = new Order(instrument, side, price, qty, ++ID, temp);
+            OFFERID++;
+            Order order = new Order(instrument, side, price, qty, OFFERID, temp);
             temp.associatedOrders.add(order);
             if(side.equals(SideEnum.BUY)){
-                instrument.orderBookBuy.put(ID.toString(),order);
+                instrument.orderBookBuy.put(OFFERID.toString(),order);
+                findMatchBuy(instrument, order);
             }
             if(side.equals(SideEnum.SELL)){
-                instrument.orderBookSell.put(ID.toString(),order);
+                instrument.orderBookSell.put(OFFERID.toString(),order);
+                findMatchSell(instrument, order);
 
             }
             SenderSSE.SendMarketSnapshot(makeSnapshot(), traderHashMap.values());
@@ -87,11 +93,20 @@ public class MatchingEngine {
         Order orderToCancel;
         if(side == SideEnum.BUY){
             orderToCancel = instrument.orderBookBuy.get(id);
+            if(!orderToCancel.trader.equals(trader)){
+                ctx.status(HttpStatus.BAD_REQUEST_400);
+                return;
+            }
             instrument.orderBookBuy.remove(id);
 
         }
         else {
+
             orderToCancel = instrument.orderBookSell.get(id);
+            if(!orderToCancel.trader.equals(trader)){
+                ctx.status(HttpStatus.BAD_REQUEST_400);
+                return;
+            }
             instrument.orderBookSell.remove(id);
         }
         trader.associatedOrders.remove(orderToCancel);
@@ -160,4 +175,158 @@ public class MatchingEngine {
 
     }
 
+    public void findMatchSell(Instrument instrument, Order order){
+
+        ArrayList<Order> matchingOrders =new ArrayList<>();
+        double priceToLookFor = order.price;
+        Integer qty = order.qty;
+        Integer totalQty = 0;
+        for (Order orderToCheck: instrument.orderBookBuy.values()
+             ) {
+            if(orderToCheck.price == priceToLookFor){
+                matchingOrders.add(orderToCheck);
+                totalQty += orderToCheck.qty;
+            }
+        }
+        matchingOrders.sort(new QtySorter());
+        Collections.reverse(matchingOrders);
+        if(qty <= totalQty) {
+            for (Order matchOrder: matchingOrders
+                 ) {
+                if(qty- matchOrder.qty >= 0) {
+                    qty -= matchOrder.qty;
+                    instrument.orderBookBuy.remove(matchOrder.id.toString());
+                    matchOrder.trader.associatedOrders.remove(matchOrder);
+                    Trade trade = new Trade(matchOrder, matchOrder.qty, ++TRADEID);
+                    matchOrder.trader.associatedTrades.add(trade);
+                    matchOrder.trader.sendOrderEvent("receiveTrades" , constructTrades(matchOrder.trader));
+                    matchOrder.trader.sendOrderEvent("receiveOrders" , getOnesOrders(matchOrder.trader));
+                    //создаем трейд
+                    if(qty == 0){
+                        endMatching(instrument, order);
+                        order.trader.sendOrderEvent("receiveTrades" , constructTrades(order.trader));
+                        order.trader.sendOrderEvent("receiveOrders" , getOnesOrders(order.trader));
+                        break;
+                    }
+                    //удалить полностью
+                }
+                else{
+                    matchOrder.qty -= qty;
+
+                    Trade trade = new Trade(matchOrder, qty, ++TRADEID);
+                    matchOrder.trader.associatedTrades.add(trade);
+                    Trade tradeForSender = new Trade(order, order.qty, ++TRADEID);
+                    order.trader.associatedTrades.add(tradeForSender);
+                    instrument.orderBookSell.remove(order.id.toString());
+                    order.trader.associatedOrders.remove(order);
+                    SenderSSE.SendMarketSnapshot(makeSnapshot(), traderHashMap.values());
+
+                    matchOrder.trader.sendOrderEvent("receiveTrades" , constructTrades(matchOrder.trader));
+                    order.trader.sendOrderEvent("receiveTrades" , constructTrades(order.trader));
+                    matchOrder.trader.sendOrderEvent("receiveOrders" , getOnesOrders(matchOrder.trader));
+                    order.trader.sendOrderEvent("receiveOrders" , getOnesOrders(order.trader));
+                    System.out.println(3);
+                    //создаем трейд
+                    break;
+                }
+
+
+            }
+        }
+
+
+    }
+
+
+
+    public void findMatchBuy(Instrument instrument, Order order){
+
+        ArrayList<Order> matchingOrders =new ArrayList<>();
+        double priceToLookFor = order.price;
+        Integer qty = order.qty;
+        Integer totalQty = 0;
+        for (Order orderToCheck: instrument.orderBookSell.values()
+        ) {
+            if(orderToCheck.price == priceToLookFor){
+                matchingOrders.add(orderToCheck);
+                totalQty += orderToCheck.qty;
+            }
+        }
+        matchingOrders.sort(new QtySorter());
+        Collections.reverse(matchingOrders);
+        if(qty <= totalQty) {
+            for (Order matchOrder: matchingOrders
+            ) {
+                if(qty- matchOrder.qty >= 0) {
+                    qty -= matchOrder.qty;
+                    instrument.orderBookSell.remove(matchOrder.id.toString());
+                    matchOrder.trader.associatedOrders.remove(matchOrder);
+                    Trade trade = new Trade(matchOrder, matchOrder.qty, ++TRADEID);
+                    matchOrder.trader.associatedTrades.add(trade);
+
+                    matchOrder.trader.sendOrderEvent("receiveTrades" , constructTrades(matchOrder.trader));
+                    matchOrder.trader.sendOrderEvent("receiveOrders" , getOnesOrders(matchOrder.trader));
+
+                    if(qty == 0){
+                        endMatching(instrument, order);
+                        order.trader.sendOrderEvent("receiveTrades" , constructTrades(order.trader));
+                        order.trader.sendOrderEvent("receiveOrders" , getOnesOrders(order.trader));
+                    }
+                }
+                else{
+                    matchOrder.qty -= qty;
+
+                    Trade trade = new Trade(matchOrder, qty, ++TRADEID);
+                    matchOrder.trader.associatedTrades.add(trade);
+                    Trade tradeForSender = new Trade(order, order.qty, ++TRADEID);
+                    order.trader.associatedTrades.add(tradeForSender);
+                    instrument.orderBookBuy.remove(order.id.toString());
+                    order.trader.associatedOrders.remove(order);
+                    SenderSSE.SendMarketSnapshot(makeSnapshot(), traderHashMap.values());
+
+                    matchOrder.trader.sendOrderEvent("receiveTrades" , constructTrades(matchOrder.trader));
+                    order.trader.sendOrderEvent("receiveTrades" , constructTrades(order.trader));
+                    matchOrder.trader.sendOrderEvent("receiveOrders" , getOnesOrders(matchOrder.trader));
+                    order.trader.sendOrderEvent("receiveOrders" , getOnesOrders(order.trader));
+                    break;
+                }
+
+
+            }
+        }
+
+
+    }
+    public void endMatching(Instrument instrument, Order order){
+        if(order.sideEnum == SideEnum.SELL)
+            instrument.orderBookSell.remove(order.id.toString());
+        else
+            instrument.orderBookBuy.remove(order.id.toString());
+
+
+
+        order.trader.associatedOrders.remove(order);
+        Trade tradeForSender = new Trade(order, order.qty, ++TRADEID);
+        order.trader.associatedTrades.add(tradeForSender);
+        SenderSSE.SendMarketSnapshot(makeSnapshot(), traderHashMap.values());
+    }
+
+    public JSONObject constructTrades(Trader trader){
+        JSONObject tradesData = new JSONObject();
+
+        for (Trade trade: trader.associatedTrades
+             ) {
+            JSONObject tradeData = new JSONObject();
+            tradeData.put("total", trade.totalPrice);
+            tradeData.put("price", trade.order.price);
+            tradeData.put("qty", trade.qty);
+            tradeData.put("side", trade.order.sideEnum);
+            tradeData.put("orderId", trade.order.id);
+            tradeData.put("instrument", trade.order.instrument.name);
+            tradesData.put(trade.id.toString(), tradeData);
+        }
+        return  tradesData;
+    }
+
 }
+

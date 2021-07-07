@@ -84,6 +84,7 @@ public class OrderEntryGateway {
                 traderBySseCode.put(code, temp);
                 verifiedClient.sseClient.sendEvent("marketSnapshot",matchingEngine.makeSnapshot().toString());
                 temp.sendOrderEvent("receiveOrders", matchingEngine.getOnesOrders(temp));
+                temp.sendOrderEvent("receiveTrades", matchingEngine.constructTrades(temp));
             }
 
             
