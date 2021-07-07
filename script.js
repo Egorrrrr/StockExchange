@@ -157,6 +157,47 @@ if(document.location.toString().includes("index")){
           req.send(JSON.stringify({name:name, code:code}));
       });
 
+      msgEvent.addEventListener("receiveTrades", msg =>{
+        var yourorders = JSON.parse(msg.data)
+        console.log(yourorders)
+        var list = document.getElementById("myt")
+        list.innerHTML = "";
+        for (const [key, value] of Object.entries(yourorders)) {
+          
+          var myorder = document.createElement("div")
+          myorder.className = "urorder"
+
+          var id = document.createElement("div");
+          id.className = "urid ur";
+          id.innerHTML = "#" + key
+
+          var urinst = document.createElement("div");
+          urinst.className = "urins ur";
+          urinst.innerHTML = value.instrument
+
+          var urside = document.createElement("div");
+          urside.className = "urside ur";
+          urside.innerHTML = value.side;
+
+          var urqty = document.createElement("div");
+          urqty.className = "urqty ur";
+          urqty.innerHTML = value.qty
+
+          var urprice = document.createElement("div");
+          urprice.className = "urprice ur";
+          urprice.innerHTML = "$" + value.price
+
+          
+
+          myorder.appendChild(id);
+          myorder.appendChild(urinst);
+          myorder.appendChild(urside);
+          myorder.appendChild(urqty);
+          myorder.appendChild(urprice);
+          list.appendChild(myorder)
+
+        }
+      });
 
       msgEvent.addEventListener("receiveOrders", msg =>{
         var yourorders = JSON.parse(msg.data)
