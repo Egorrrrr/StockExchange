@@ -1,22 +1,23 @@
 import io.javalin.http.Context;
 import org.eclipse.jetty.http.HttpStatus;
 import org.jetbrains.annotations.NotNull;
-import org.json.HTTP;
 import org.json.JSONObject;
 
-import java.awt.*;
 import java.util.HashMap;
 
 public class MatchingEngine {
 
     public HashMap<String, Instrument> instrumentMap;
-    HashMap<String, Client> clientMap;
+
+    HashMap<String, Trader> traderHashMap;
+    HashMap<String, Trader> traderBySseCodeMap;
 
     public static int ID = 0;
-    public MatchingEngine(HashMap<String, Instrument> instrumentMap,HashMap<String, Client> clientMap ){
+    public MatchingEngine(HashMap<String, Instrument> instrumentMap,HashMap<String, Trader> traderMap, HashMap<String, Trader> traderBySseCodeMap  ){
 
         this.instrumentMap = instrumentMap;
-        this.clientMap = clientMap;
+        this.traderHashMap = traderMap;
+        this.traderBySseCodeMap = traderBySseCodeMap;
     }
 
     private static Integer tryParseInt(String value, Context ctx) {
@@ -42,6 +43,7 @@ public class MatchingEngine {
 
         System.out.println(ctx.body());
         JSONObject jsonOrder = new JSONObject(ctx.body());
+        String code = jsonOrder.getString("code");
 
         Instrument instrument = instrumentMap.get(jsonOrder.getString("instrument"));
 
@@ -54,7 +56,8 @@ public class MatchingEngine {
         double price = tryParseDouble(priceString, ctx);
 
         if(qty > 0 && price > 0 && instrument != null ) {
-            Order order = new Order(instrument, side, price, qty, ++ID);
+            Trader temp = traderBySseCodeMap.get(code);
+            Order order = new Order(instrument, side, price, qty, ++ID, temp);
             if(side.equals(SideEnum.BUY)){
                 System.out.println("buy");
                 instrument.orderBookBuy.add(order);
@@ -64,7 +67,7 @@ public class MatchingEngine {
                 instrument.orderBookSell.add(order);
 
             }
-            SenderSSE.SendMarketSnapshot(makeSnapshot(), clientMap.values());
+            SenderSSE.SendMarketSnapshot(makeSnapshot(), traderHashMap.values());
         }
         else{
 
@@ -119,6 +122,10 @@ public class MatchingEngine {
         entireSnapshot.put("instruments",instruments);
 
         return entireSnapshot;
+    }
+
+    public void getOnesOrders(Trader trader){
+
     }
 
 }

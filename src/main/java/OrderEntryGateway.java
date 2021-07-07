@@ -39,14 +39,16 @@ public class OrderEntryGateway {
     public void start() throws IOException {
 
         HashMap<String, Client> clientAwaitingVerification = new HashMap<>();
-        HashMap<String, Client> clientMap = new HashMap<>();
+        HashMap<String, Trader> traderBySseCode = new HashMap<>();
+        HashMap<String, Trader> traderMap = new HashMap<>();
         ArrayList<String> loginQueue = new ArrayList<>();
+
         //запуск javalin
         JAVALIN = Javalin.create(JavalinConfig::enableCorsForAllOrigins).start(PORT);
 
         //считываем файл с инструментами и зансим их в словарь в классе MatchingEngine
         InputStream instrumentFile = new FileInputStream("src/main/java/ins.txt");
-        MatchingEngine matchingEngine = new MatchingEngine(readFromInputStream(instrumentFile),clientMap);
+        MatchingEngine matchingEngine = new MatchingEngine(readFromInputStream(instrumentFile),traderMap, traderBySseCode);
 
 
 
@@ -62,6 +64,9 @@ public class OrderEntryGateway {
             JSONObject loginData = new JSONObject(client.body());
             String id = loginData.getString("username");
             loginQueue.add(id);
+            Trader trader = new Trader(id);
+            traderMap.put(id, trader);
+
 
 
         });
@@ -72,10 +77,11 @@ public class OrderEntryGateway {
             String code = clientVerificationData.getString("code");
             if(loginQueue.contains(id)){
 
-                System.out.println("verified");
                 Client verifiedClient = clientAwaitingVerification.get(code);
-                System.out.println(verifiedClient.code);
-                clientMap.put(code, verifiedClient);
+
+                Trader temp = traderMap.get(id);
+                temp.associatedClients.add(verifiedClient);
+                traderBySseCode.put(code, temp);
                 verifiedClient.sseClient.sendEvent("marketSnapshot",matchingEngine.makeSnapshot().toString());
             }
 

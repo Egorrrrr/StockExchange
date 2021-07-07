@@ -6,14 +6,15 @@ public class Order {
     public SideEnum sideEnum;
     public double price;
     public int qty;
-    public Context client;
+    public Trader trader;
     public Integer id;
-    public Order(Instrument instrument, SideEnum sideEnum, double price, int qty, int id){
+    public Order(Instrument instrument, SideEnum sideEnum, double price, int qty, int id, Trader trader){
         this.instrument = instrument;
         this.sideEnum = sideEnum;
         this.price = price;
         this.qty = qty;
         this.id = id;
+        this.trader = trader;
 
     }
 

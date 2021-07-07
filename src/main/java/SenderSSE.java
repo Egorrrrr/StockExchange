@@ -4,11 +4,11 @@ import java.util.Collection;
 
 public class SenderSSE {
 
-    public static void SendMarketSnapshot(JSONObject marketSnapshot, Collection<Client> v){
-        for (Client cl: v
+    public static void SendMarketSnapshot(JSONObject marketSnapshot, Collection<Trader> traderList){
+
+        for (Trader trader: traderList
              ) {
-            System.out.println("here?");
-            cl.sseClient.sendEvent("marketSnapshot", marketSnapshot.toString());
+            trader.sendSseMarketSnapshot(marketSnapshot);
         }
 
     }
