@@ -1,3 +1,4 @@
+
 body{
     margin: 0;
     display: flex;
@@ -7,11 +8,78 @@ body{
     height: 100vh;
 }
 
+.urorders{
+    display: flex;
+    height: 100%;
+    width: 100%;
+    flex-direction: column;
+}
+.urorder{
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    flex-direction: row;
+    border-width: 1px;
+    
+    border-style: solid;
+    border-right-style:dashed ;
+    border-left-style:dashed ;
+    border-color: green;
+    
+}
+
+
+.ur{
+    margin-left: 4.5%;
+    margin-right: 5%;
+    width: 20px;
+}
+.urside{
+    margin-right: 20px;
+}
+
+.cancel:hover{
+    
+    cursor: pointer;
+    color: lightgray;
+}
+
+.cancel{
+    font-family: sans-serif;
+    border-style: solid;
+    border-color: green;
+    border-width: 1px;
+    width: 20px;
+    text-align: center;
+    height: 20px;    
+}
+
+.myorders{
+    font-size: 20px;
+    color: green;
+    height: 75%;
+    width: 19%;
+    border-style: dashed;
+    border-width: 1px;
+    border-color: green;
+    margin-right: 1%;
+}
+.myordersheader{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-style: solid;
+    border-width: 0;
+    border-bottom-width: 1px;
+}
+
 .menu{
     display: flex;
     flex-direction: row;
     background-color: transparent;
-    border-style: dashed;
+    border-style: solid;
     border-color: green;
     border-width: 1px;
     width: 60%;
@@ -30,6 +98,9 @@ body{
 }
 
 .sellheader{
+    font-size: 25px;
+    font-weight: 100;
+    font-family: sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -43,6 +114,10 @@ body{
     
 }
 .buyheader{
+    font-size: 25px;
+    font-weight: 100;
+    font-family: sans-serif;
+
     display: flex;
     justify-content: center;
     align-items: center;
@@ -113,6 +188,10 @@ table{
     height: 95%;
     display: flex;
     flex-direction: row;
+    border-style: solid;
+    border-color: green;
+    border-width: 0px;
+    border-bottom-width: 1px;
     
 }
 
@@ -139,6 +218,10 @@ table{
 }
 
 .qtyinp{
+    border-width: 0px;
+    border-right-width: 1px;
+    border-style: solid;
+    border-color: green;
     width: 25%;
 }
 
@@ -186,7 +269,8 @@ td{
 }
 
 th{
-    
+    font-family: sans-serif;
+    font-weight: 50;
     font-size: 20px;
     border-style: solid;
     border-width: 1px;
