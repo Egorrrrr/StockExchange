@@ -3,6 +3,7 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -23,10 +24,10 @@ public class MatchingEngine {
         this.traderBySseCodeMap = traderBySseCodeMap;
     }
 
-    private static Integer tryParseInt(String value, Context ctx) {
+    private static BigDecimal tryParseDecimal(String value, Context ctx) {
         try {
 
-            return Integer.parseInt(value);
+            return  new BigDecimal(value);
         } catch (NumberFormatException e) {
             ctx.status(HttpStatus.BAD_REQUEST_400);
             throw e;
@@ -54,20 +55,20 @@ public class MatchingEngine {
         String qtyString = jsonOrder.getString("qty");
         String priceString = jsonOrder.getString("price");
 
-        int qty = tryParseInt(qtyString, ctx);
-        double price = tryParseDouble(priceString, ctx);
+        BigDecimal qty = tryParseDecimal(qtyString, ctx);
+        BigDecimal price = tryParseDecimal(priceString, ctx);
 
-        if(qty > 0 && price > 0 && instrument != null ) {
+        if(qty.compareTo(BigDecimal.valueOf(0)) > 0 && price.compareTo(BigDecimal.valueOf(0)) > 0 && instrument != null ) {
             Trader temp = traderBySseCodeMap.get(code);
             OFFERID++;
             Order order = new Order(instrument, side, price, qty, OFFERID, temp);
-            temp.associatedOrders.add(order);
+            temp.getAssociatedOrders().add(order);
             if(side.equals(SideEnum.BUY)){
-                instrument.orderBookBuy.put(OFFERID.toString(),order);
+                instrument.getBookBuy().put(OFFERID.toString(),order);
                 findMatch(instrument, order, side);
             }
             if(side.equals(SideEnum.SELL)){
-                instrument.orderBookSell.put(OFFERID.toString(),order);
+                instrument.getBookSell().put(OFFERID.toString(),order);
                 findMatch(instrument, order, side);
 
             }
@@ -92,24 +93,24 @@ public class MatchingEngine {
         Instrument instrument = instrumentMap.get(cancellationData.getString("instrument"));
         Order orderToCancel;
         if(side == SideEnum.BUY){
-            orderToCancel = instrument.orderBookBuy.get(id);
-            if(!orderToCancel.trader.equals(trader)){
+            orderToCancel = instrument.getBookBuy().get(id);
+            if(!orderToCancel.getTrader().equals(trader)){
                 ctx.status(HttpStatus.BAD_REQUEST_400);
                 return;
             }
-            instrument.orderBookBuy.remove(id);
+            instrument.getBookBuy().remove(id);
 
         }
         else {
 
-            orderToCancel = instrument.orderBookSell.get(id);
-            if(!orderToCancel.trader.equals(trader)){
+            orderToCancel = instrument.getBookSell().get(id);
+            if(!orderToCancel.getTrader().equals(trader)){
                 ctx.status(HttpStatus.BAD_REQUEST_400);
                 return;
             }
-            instrument.orderBookSell.remove(id);
+            instrument.getBookSell().remove(id);
         }
-        trader.associatedOrders.remove(orderToCancel);
+        trader.getAssociatedOrders().remove(orderToCancel);
         orderToCancel = null;
         SenderSSE.SendMarketSnapshot(makeSnapshot(), traderHashMap.values());
         trader.sendOrderEvent("receiveOrders" , getOnesOrders(trader));
@@ -127,31 +128,31 @@ public class MatchingEngine {
             JSONObject orders = new JSONObject();
 
             JSONObject sellOrders = new JSONObject();
-            for (Order orderSell: instrument.orderBookSell.values()
+            for (Order orderSell: instrument.getBookSell().values()
                  ) {
                 JSONObject orderData = new JSONObject();
-                orderData.put("id", orderSell.id);
-                orderData.put("side", orderSell.sideEnum);
-                orderData.put("price", orderSell.price);
-                orderData.put("instrument", orderSell.instrument.name);
-                orderData.put("qty", orderSell.qty);
-                sellOrders.put(orderSell.id.toString(), orderData);
+                orderData.put("id", orderSell.getId());
+                orderData.put("side", orderSell.getSide());
+                orderData.put("price", orderSell.getPrice());
+                orderData.put("instrument", orderSell.getInstrument().getName());
+                orderData.put("qty", orderSell.getQty());
+                sellOrders.put(orderSell.getId().toString(), orderData);
             }
 
             JSONObject buyOrders = new JSONObject();
-            for (Order orderBuy: instrument.orderBookBuy.values()
+            for (Order orderBuy: instrument.getBookBuy().values()
                  ) {
                 JSONObject orderData = new JSONObject();
-                orderData.put("id", orderBuy.id);
-                orderData.put("side", orderBuy.sideEnum);
-                orderData.put("price", orderBuy.price);
-                orderData.put("instrument", orderBuy.instrument.name);
-                orderData.put("qty", orderBuy.qty);
-                buyOrders.put(orderBuy.id.toString(), orderData);
+                orderData.put("id", orderBuy.getId());
+                orderData.put("side", orderBuy.getSide());
+                orderData.put("price", orderBuy.getPrice());
+                orderData.put("instrument", orderBuy.getInstrument().getName());
+                orderData.put("qty", orderBuy.getQty());
+                buyOrders.put(orderBuy.getId().toString(), orderData);
             }
             orders.put("buyOrders", buyOrders);
             orders.put("sellOrders", sellOrders);
-            instruments.put(instrument.name, orders);
+            instruments.put(instrument.getName(), orders);
 
         }
         entireSnapshot.put("instruments",instruments);
@@ -161,15 +162,15 @@ public class MatchingEngine {
 
     public JSONObject getOnesOrders(Trader trader){
         JSONObject traderOrders = new JSONObject();
-        for (Order order: trader.associatedOrders
+        for (Order order: trader.getAssociatedOrders()
              ) {
             JSONObject orderData = new JSONObject();
-            orderData.put("id", order.id);
-            orderData.put("side", order.sideEnum);
-            orderData.put("price", order.price);
-            orderData.put("instrument", order.instrument.name);
-            orderData.put("qty", order.qty);
-            traderOrders.put(order.id.toString(), orderData);
+            orderData.put("id", order.getId());
+            orderData.put("side", order.getSide());
+            orderData.put("price", order.getPrice());
+            orderData.put("instrument", order.getInstrument().getName());
+            orderData.put("qty", order.getQty());
+            traderOrders.put(order.getId().toString(), orderData);
         }
         return traderOrders;
 
@@ -182,13 +183,14 @@ public class MatchingEngine {
     public void findMatch(Instrument instrument, Order order, SideEnum side){
 
         ArrayList<Order> matchingOrders =new ArrayList<>();
-        double priceToLookFor = order.price;
-        Integer qty = order.qty;
-        HashMap<String,Order>  yourBook = side.equals(SideEnum.BUY) ? instrument.orderBookSell : instrument.orderBookBuy;
-        HashMap<String,Order>  othersBook = side.equals(SideEnum.BUY) ? instrument.orderBookBuy : instrument.orderBookSell;
+        BigDecimal priceToLookFor = order.getPrice();
+        BigDecimal qty = order.getQty();
+        HashMap<String,Order>  yourBook = side.equals(SideEnum.BUY) ? instrument.getBookSell() : instrument.getBookBuy();
+        HashMap<String,Order>  othersBook = side.equals(SideEnum.BUY) ? instrument.getBookBuy() : instrument.getBookSell();
         for (Order orderToCheck: yourBook.values()
         ) {
-            if(orderToCheck.price == priceToLookFor){
+
+            if(orderToCheck.getPrice().compareTo(priceToLookFor) == 0 && !order.getTrader().equals(orderToCheck.getTrader())){
                 matchingOrders.add(orderToCheck);
             }
         }
@@ -198,38 +200,38 @@ public class MatchingEngine {
         int length = matchingOrders.toArray().length;
         for (Order matchOrder: matchingOrders
         ) {
-            if(qty- matchOrder.qty >= 0) {
-                qty -= matchOrder.qty;
-                yourBook.remove(matchOrder.id.toString());
-                matchOrder.trader.associatedOrders.remove(matchOrder);
-                Trade trade = new Trade(matchOrder, matchOrder.qty, ++TRADEID);
-                matchOrder.trader.associatedTrades.add(trade);
+            if(qty.subtract(matchOrder.getQty()).compareTo(BigDecimal.valueOf(0))  >= 0) {
+                qty = qty.subtract(matchOrder.getQty());
+                yourBook.remove(matchOrder.getId().toString());
+                matchOrder.getTrader().getAssociatedOrders().remove(matchOrder);
+                Trade trade = new Trade(matchOrder, matchOrder.getQty(), ++TRADEID);
+                matchOrder.getTrader().getAssociatedTrades().add(trade);
                 sendTradeAndOrders(matchOrder);
 
-                if(qty == 0){
+                if(qty.compareTo(BigDecimal.valueOf(0)) == 0 ){
                     endMatching(instrument, order);
                     sendTradeAndOrders(order);
                     break;
                 }
                 if(i == length-1){
-                    Trade tradeSender = new Trade(order, order.qty - qty, ++TRADEID);
-                    order.qty = qty;
-                    order.trader.associatedTrades.add(tradeSender);
+                    Trade tradeSender = new Trade(order, order.getQty().subtract(qty), ++TRADEID);
+                    order.setQty(qty);
+                    order.getTrader().getAssociatedTrades().add(tradeSender);
                     sendTradeAndOrders(order);
-                    matchOrder.trader.associatedTrades.add(trade);
+                    matchOrder.getTrader().getAssociatedTrades().add(trade);
                 }
             }
             else{
-                matchOrder.qty -= qty;
+                matchOrder.setQty(matchOrder.getQty().subtract(qty));
 
                 Trade trade = new Trade(matchOrder, qty, ++TRADEID);
-                matchOrder.trader.associatedTrades.add(trade);
-                Trade tradeForSender = new Trade(order, order.qty, ++TRADEID);
-                order.trader.associatedTrades.add(tradeForSender);
-                othersBook.remove(order.id.toString());
-                order.trader.associatedOrders.remove(order);
-                SenderSSE.SendMarketSnapshot(makeSnapshot(), traderHashMap.values());
+                matchOrder.getTrader().getAssociatedTrades().add(trade);
+                Trade tradeForSender = new Trade(order, order.getQty(), ++TRADEID);
+                order.getTrader().getAssociatedTrades().add(tradeForSender);
+                othersBook.remove(order.getId().toString());
+                order.getTrader().getAssociatedOrders().remove(order);
 
+                SenderSSE.SendMarketSnapshot(makeSnapshot(), traderHashMap.values());
                 sendTradeAndOrders(order);
                 sendTradeAndOrders(matchOrder);
                 break;
@@ -244,38 +246,35 @@ public class MatchingEngine {
     }
     public void endMatching(Instrument instrument, Order order){
 
-        if(order.sideEnum == SideEnum.SELL)
-            instrument.orderBookSell.remove(order.id.toString());
+        if(order.getSide() == SideEnum.SELL)
+            instrument.getBookSell().remove(order.getId().toString());
         else
-            instrument.orderBookBuy.remove(order.id.toString());
+            instrument.getBookBuy().remove(order.getId().toString());
 
-
-
-        order.trader.associatedOrders.remove(order);
-        Trade tradeForSender = new Trade(order, order.qty, ++TRADEID);
-        order.trader.associatedTrades.add(tradeForSender);
+        order.getTrader().getAssociatedOrders().remove(order);
+        Trade tradeForSender = new Trade(order, order.getQty(), ++TRADEID);
+        order.getTrader().getAssociatedTrades().add(tradeForSender);
         SenderSSE.SendMarketSnapshot(makeSnapshot(), traderHashMap.values());
     }
 
     private void sendTradeAndOrders(Order order){
-        order.trader.sendOrderEvent("receiveTrades" , constructTrades(order.trader));
-        order.trader.sendOrderEvent("receiveOrders" , getOnesOrders(order.trader));
+        order.getTrader().sendOrderEvent("receiveTrades" , constructTrades(order.getTrader()));
+        order.getTrader().sendOrderEvent("receiveOrders" , getOnesOrders(order.getTrader()));
     }
 
 
     public JSONObject constructTrades(Trader trader){
         JSONObject tradesData = new JSONObject();
 
-        for (Trade trade: trader.associatedTrades
+        for (Trade trade: trader.getAssociatedTrades()
              ) {
             JSONObject tradeData = new JSONObject();
-            tradeData.put("total", trade.totalPrice);
-            tradeData.put("price", trade.order.price);
-            tradeData.put("qty", trade.qty);
-            tradeData.put("side", trade.order.sideEnum);
-            tradeData.put("orderId", trade.order.id);
-            tradeData.put("instrument", trade.order.instrument.name);
-            tradesData.put(trade.id.toString(), tradeData);
+            tradeData.put("price", trade.getOrder().getPrice());
+            tradeData.put("qty", trade.getQty());
+            tradeData.put("side", trade.getOrder().getSide());
+            tradeData.put("orderId", trade.getOrder().getId());
+            tradeData.put("instrument", trade.getOrder().getInstrument().getName());
+            tradesData.put(trade.getId().toString(), tradeData);
         }
         return  tradesData;
     }

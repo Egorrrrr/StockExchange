@@ -80,7 +80,7 @@ public class OrderEntryGateway {
 
                 Client verifiedClient = clientAwaitingVerification.get(code);
                 Trader temp = traderMap.get(id);
-                temp.associatedClients.add(verifiedClient);
+                temp.getAssociatedClients().add(verifiedClient);
                 traderBySseCode.put(code, temp);
                 verifiedClient.sseClient.sendEvent("marketSnapshot",matchingEngine.makeSnapshot().toString());
                 temp.sendOrderEvent("receiveOrders", matchingEngine.getOnesOrders(temp));

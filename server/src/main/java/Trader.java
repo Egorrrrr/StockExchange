@@ -5,10 +5,29 @@ import java.util.ArrayList;
 
 public class Trader {
 
-    public String name;
-    public ArrayList<Client> associatedClients;
-    public ArrayList<Order> associatedOrders;
-    public ArrayList<Trade> associatedTrades;
+    private String name;
+    public String getName(){
+        return this.name;
+    }
+    public boolean setName(String value){
+        this.name = value;
+        return true;
+    }
+
+    private ArrayList<Client> associatedClients;
+    public ArrayList<Client> getAssociatedClients(){
+        return this.associatedClients;
+    }
+
+    private ArrayList<Order> associatedOrders;
+    public ArrayList<Order> getAssociatedOrders(){
+        return this.associatedOrders;
+    }
+
+    private ArrayList<Trade> associatedTrades;
+    public ArrayList<Trade> getAssociatedTrades(){
+        return this.associatedTrades;
+    }
 
     public Trader(String name){
         associatedClients = new ArrayList<>();

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Exchange</title>
+</head>
+<body>
+    <div class="myorders">
+        <div class="myordersheader">TRADES</div>
+        <div class="trades" id='myt'>
+            
+        </div>
+    </div>
+    <div class="myorders">
+        <div class="myordersheader">YOUR ORDERS</div>
+        <div class="urorders" id='myo'>
+            
+        </div>
+    </div>
+    <div class="menu">
+        
+        
+        <div class="instrumentContainer">
+            <table id="tableone">
+                <th>ISNTRUMENT</th>
+                <th>SELL</th>
+                <th>BUY</th>
+            </tr>
+            
+            </table>
+        </div>
+        <div class="orderfunc">
+        <div class="orderBook">
+            <div class="sell">
+                <div class="sellheader">SELL</div>
+                <div class="selltable" id="selltab">
+                    
+                </div>
+            </div>
+            <div class="buy">
+                <div class="buyheader">BUY</div>
+                
+                <div class="buytable" id="buytab">
+                    
+
+                </div>     
+
+            </div>
+    </div>
+    <div class="orderfooter">
+        <div class="pos" id="inst">INS:</div>
+        <div class="qtyinp">
+            <label for="" class="labqty">$:</label>
+            <input type="number" placeholder="price" id="price" class="qtyinput">
+        </div>
+        <div class="qtyinp">
+            <label for="" class="labqty">QTY:</label>
+            <input type="number" placeholder="qty" id="qty" class="qtyinput">
+        </div>
+        
+        <div class="sellbtn btn" onclick="makeOrder(false)">SELL</div>
+        <div class="buybtn btn" onclick="makeOrder(true)">BUY</div>
+    </div>
+
+</div>
+    </div>
+
+</body>
+<script src="script.js"></script>
+</html>
