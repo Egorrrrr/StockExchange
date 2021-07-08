@@ -169,7 +169,7 @@ if(document.location.toString().includes("index")){
 
           var id = document.createElement("div");
           id.className = "urid ur";
-          id.innerHTML = "#" + key
+          id.innerHTML = "#" + value.orderId;
 
           var urinst = document.createElement("div");
           urinst.className = "urins ur";
@@ -338,7 +338,7 @@ function bestSell(instrument){
     pricesArray.push(value.price)
 
   }
-  var result = Math.max(...pricesArray)
+  var result = Math.min(...pricesArray)
   return isFinite(result) ? result : "-" 
 
 }
@@ -350,7 +350,7 @@ function bestBuy(instrument){
 
   }
   
-  var result = Math.min(...pricesArray)
+  var result = Math.max(...pricesArray)
   return isFinite(result) ? result : "-" 
 
 }
