@@ -1,3 +1,7 @@
+package ExchangeComponents;
+
+import ExchangeComponents.Beans.Order;
+
 import java.util.Comparator;
 
 public class QtySorter  implements Comparator<Order>{

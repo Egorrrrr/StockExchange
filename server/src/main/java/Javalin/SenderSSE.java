@@ -1,3 +1,6 @@
+package Javalin;
+
+import ExchangeComponents.Beans.Trader;
 import org.json.JSONObject;
 
 import java.util.Collection;

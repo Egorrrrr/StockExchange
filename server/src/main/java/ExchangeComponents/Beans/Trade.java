@@ -1,3 +1,5 @@
+package ExchangeComponents.Beans;
+
 import java.math.BigDecimal;
 
 public class Trade {

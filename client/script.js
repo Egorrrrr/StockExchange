@@ -13,7 +13,7 @@ function makeOrder(e){
   var qty = document.getElementById("qty").value
   if(price != "" || qty !=""){
     
-    fetch(IP+"/new-order-single",{
+    fetch(IP+"/new-order-single?" + "code="+code,{
       method: 'POST',
       body:JSON.stringify({code: code, side:side, price:price, qty:qty, instrument:inst})
     })

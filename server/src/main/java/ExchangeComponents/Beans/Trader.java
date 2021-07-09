@@ -1,6 +1,10 @@
+package ExchangeComponents.Beans;
+
+import ExchangeComponents.Beans.Client;
+import ExchangeComponents.Beans.Order;
+import ExchangeComponents.Beans.Trade;
 import org.json.JSONObject;
 
-import javax.management.remote.JMXServerErrorException;
 import java.util.ArrayList;
 
 public class Trader {
@@ -39,7 +43,7 @@ public class Trader {
     public void sendSseMarketSnapshot(JSONObject snapshot){
         for (Client cl: associatedClients
         ) {
-            cl.sseClient.sendEvent("marketSnapshot", snapshot.toString());
+            cl.getSseClient().sendEvent("marketSnapshot", snapshot.toString());
         }
     }
 
@@ -47,7 +51,7 @@ public class Trader {
 
         for (Client cl: associatedClients
              ) {
-            cl.sseClient.sendEvent(event, data.toString());
+            cl.getSseClient().sendEvent(event, data.toString());
         }
 
     }

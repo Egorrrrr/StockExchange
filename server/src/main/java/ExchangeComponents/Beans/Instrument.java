@@ -1,4 +1,5 @@
-import java.util.ArrayList;
+package ExchangeComponents.Beans;
+
 import java.util.HashMap;
 
 public class Instrument {
@@ -8,7 +9,12 @@ public class Instrument {
         return this.name;
     }
 
-    private HashMap<String ,Order> orderBookSell;
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    private HashMap<String , Order> orderBookSell;
     public HashMap<String ,Order> getBookSell(){
         return orderBookSell;
     }
