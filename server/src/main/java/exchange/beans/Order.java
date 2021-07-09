@@ -1,6 +1,6 @@
-package ExchangeComponents.Beans;
+package exchange.beans;
 
-import ExchangeComponents.SideEnum;
+import exchange.SideEnum;
 import com.fasterxml.jackson.annotation.JsonSetter;
 
 import java.math.BigDecimal;

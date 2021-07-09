@@ -1,6 +1,6 @@
-package ExchangeComponents;
+package exchange;
 
-import ExchangeComponents.Beans.Order;
+import exchange.beans.Order;
 
 import java.util.Comparator;
 

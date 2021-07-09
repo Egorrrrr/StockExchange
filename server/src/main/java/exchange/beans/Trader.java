@@ -1,8 +1,5 @@
-package ExchangeComponents.Beans;
+package exchange.beans;
 
-import ExchangeComponents.Beans.Client;
-import ExchangeComponents.Beans.Order;
-import ExchangeComponents.Beans.Trade;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -40,12 +37,7 @@ public class Trader {
         this.name = name;
     }
 
-    public void sendSseMarketSnapshot(JSONObject snapshot){
-        for (Client cl: associatedClients
-        ) {
-            cl.getSseClient().sendEvent("marketSnapshot", snapshot.toString());
-        }
-    }
+
 
     public void sendOrderEvent(String event, JSONObject data){
 

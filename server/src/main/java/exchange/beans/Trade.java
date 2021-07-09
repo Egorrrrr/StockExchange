@@ -1,4 +1,4 @@
-package ExchangeComponents.Beans;
+package exchange.beans;
 
 import java.math.BigDecimal;
 

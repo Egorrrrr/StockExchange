@@ -1,4 +1,4 @@
-package ExchangeComponents;
+package exchange;
 
 public enum SideEnum{
     BUY,

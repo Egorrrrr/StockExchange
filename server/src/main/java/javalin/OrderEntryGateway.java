@@ -1,9 +1,9 @@
-package Javalin;
+package javalin;
 
-import ExchangeComponents.Beans.Client;
-import ExchangeComponents.Beans.Instrument;
-import ExchangeComponents.MatchingEngine;
-import ExchangeComponents.Beans.Trader;
+import exchange.beans.Client;
+import exchange.beans.Instrument;
+import exchange.MatchingEngine;
+import exchange.beans.Trader;
 import io.javalin.Javalin;
 import io.javalin.core.JavalinConfig;
 import io.javalin.http.sse.SseClient;
@@ -56,9 +56,13 @@ public class OrderEntryGateway {
         InputStream instrumentFile = new FileInputStream("src/main/java/ins.txt");
         HashMap<String, Instrument> instrumentHashMap = readInstrumentsFromInputStream(instrumentFile);
         MatchingEngine matchingEngine = new MatchingEngine(instrumentHashMap,traderMap, traderBySseCode);
-
+        Notifier notifier = new Notifier(traderSSEClientMap, matchingEngine);
         JSONExchange jsonExchange = new JSONExchange(matchingEngine, traderBySseCode, instrumentHashMap, traderMap, traderSSEClientMap);
 
+        Thread engineThread = new Thread(matchingEngine);
+        Thread notifierThread = new Thread(notifier);
+        engineThread.start();
+        notifierThread.start();
 
 
         JAVALIN.post("/new-order-single", jsonExchange::createOrderFromJSON);

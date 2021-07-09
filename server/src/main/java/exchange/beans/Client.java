@@ -1,4 +1,4 @@
-package ExchangeComponents.Beans;
+package exchange.beans;
 
 import io.javalin.http.sse.SseClient;
 

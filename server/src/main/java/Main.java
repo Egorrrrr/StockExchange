@@ -1,4 +1,4 @@
-import Javalin.OrderEntryGateway;
+import javalin.OrderEntryGateway;
 
 import java.io.IOException;
 

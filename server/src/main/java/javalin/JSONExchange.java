@@ -1,10 +1,9 @@
-package Javalin;
+package javalin;
 
-import ExchangeComponents.Beans.Instrument;
-import ExchangeComponents.Beans.Order;
-import ExchangeComponents.Beans.Trade;
-import ExchangeComponents.Beans.Trader;
-import ExchangeComponents.MatchingEngine;
+import exchange.beans.Instrument;
+import exchange.beans.Order;
+import exchange.beans.Trader;
+import exchange.MatchingEngine;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,9 +50,8 @@ public class JSONExchange {
 
         ArrayList<Trader> tradersToNotify = engine.processNewOrder(order);
 
-        order.getTrader().sendOrderEvent("receiveOrders" , JSONConstructor.getOnesOrders(order.getTrader()));
-        SenderSSE.SendMarketSnapshot(JSONConstructor.makeJSONMarketSnapshot(instrumentHashMap), traderHashMap.values());
-        sendTradeAndOrders(tradersToNotify);
+        sendMarketSnapshot();
+        //sendTradeAndOrders(tradersToNotify);
 
     }
 
@@ -67,6 +65,17 @@ public class JSONExchange {
             }
         }
     }
+    private void sendMarketSnapshot() {
+        String market = JSONConstructor.makeJSONMarketSnapshot(instrumentHashMap).toString();
+        for (ArrayList<SseClient> sseList: traderSSEClientMap.values()
+             ) {
+            for (SseClient sse: sseList
+                 ) {
+                sse.sendEvent("marketSnapshot", market);
+            }
+        }
+
+    }
 
     public void cancelOrderFromJSON(@NotNull Context ctx) throws JsonProcessingException {
        Trader tempTrader = traderBySseCodeMap.get(ctx.queryParam("code"));
@@ -74,8 +83,8 @@ public class JSONExchange {
        tempOrder.setInstrument(instrumentHashMap.get(tempOrder.getInstrument().getName()));
        boolean result = engine.cancelOrder(tempOrder);
        if(result){
-           SenderSSE.SendMarketSnapshot(JSONConstructor.makeJSONMarketSnapshot(instrumentHashMap), traderHashMap.values());
-           tempTrader.sendOrderEvent("receiveOrders" , JSONConstructor.getOnesOrders(tempTrader));
+           sendMarketSnapshot();
+          // tempTrader.sendOrderEvent("receiveOrders" , JSONConstructor.getOnesOrders(tempTrader));
        }
        else{
 

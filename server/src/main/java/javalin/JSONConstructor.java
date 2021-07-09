@@ -1,9 +1,9 @@
-package Javalin;
+package javalin;
 
-import ExchangeComponents.Beans.Instrument;
-import ExchangeComponents.Beans.Order;
-import ExchangeComponents.Beans.Trade;
-import ExchangeComponents.Beans.Trader;
+import exchange.beans.Instrument;
+import exchange.beans.Order;
+import exchange.beans.Trade;
+import exchange.beans.Trader;
 import org.json.JSONObject;
 
 import java.util.HashMap;

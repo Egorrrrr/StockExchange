@@ -1,26 +1,28 @@
-package ExchangeComponents;
+package exchange;
 
-import ExchangeComponents.Beans.Instrument;
-import ExchangeComponents.Beans.Order;
-import ExchangeComponents.Beans.Trade;
-import ExchangeComponents.Beans.Trader;
-import Javalin.JSONConstructor;
-import Javalin.SenderSSE;
+import exchange.beans.Instrument;
+import exchange.beans.Order;
+import exchange.beans.Trade;
+import exchange.beans.Trader;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.javalin.http.Context;
 import org.eclipse.jetty.http.HttpStatus;
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
-public class MatchingEngine {
+
+public class MatchingEngine implements Runnable{
+
+    public BlockingQueue<Order> orderBlockingQueue;
 
     public HashMap<String, Instrument> instrumentMap;
-
+    private ArrayList<Trader> tradersToNotifyList;
     HashMap<String, Trader> traderHashMap;
     HashMap<String, Trader> traderBySseCodeMap;
 
@@ -31,6 +33,13 @@ public class MatchingEngine {
         this.instrumentMap = instrumentMap;
         this.traderHashMap = traderMap;
         this.traderBySseCodeMap = traderBySseCodeMap;
+        orderBlockingQueue = new ArrayBlockingQueue<>(1);
+        tradersToNotifyList = new ArrayList<>();
+
+    }
+
+    public ArrayList<Trader> getTradersToNotifyList() {
+        return tradersToNotifyList;
     }
 
     private static BigDecimal tryParseDecimal(String value, Context ctx) {
@@ -63,11 +72,11 @@ public class MatchingEngine {
     ArrayList<Trader> tradersToNotify = null;
     if(side.equals(SideEnum.BUY)){
         instrument.getBookBuy().put(OFFERID.toString(),order);
-        tradersToNotify = findMatch(instrument, order, side);
+        orderBlockingQueue.add(order);
     }
     if(side.equals(SideEnum.SELL)){
         instrument.getBookSell().put(OFFERID.toString(),order);
-        tradersToNotify = findMatch(instrument, order, side);
+        orderBlockingQueue.add(order);
 
     }
 
@@ -116,13 +125,14 @@ public class MatchingEngine {
 
 
 
-    public ArrayList<Trader> findMatch(Instrument instrument, Order order, SideEnum side) throws JsonProcessingException {
+    public ArrayList<Trader> findMatch(Order order) throws JsonProcessingException {
 
-        ArrayList<Trader> tradesToNotify = new ArrayList<>();
-        tradesToNotify.add(order.getTrader());
+        tradersToNotifyList.add(order.getTrader());
         ArrayList<Order> matchingOrders =new ArrayList<>();
         BigDecimal priceToLookFor = order.getPrice();
         BigDecimal qty = order.getQty();
+        SideEnum side = order.getSide();
+        Instrument instrument = order.getInstrument();
         HashMap<String,Order>  yourBook = side.equals(SideEnum.BUY) ? instrument.getBookSell() : instrument.getBookBuy();
         HashMap<String,Order>  othersBook = side.equals(SideEnum.BUY) ? instrument.getBookBuy() : instrument.getBookSell();
         for (Order orderToCheck: yourBook.values()
@@ -139,7 +149,7 @@ public class MatchingEngine {
         for (Order matchOrder: matchingOrders
         ) {
             if(qty.subtract(matchOrder.getQty()).compareTo(BigDecimal.valueOf(0))  >= 0) {
-                tradesToNotify.add(matchOrder.getTrader());
+                tradersToNotifyList.add(matchOrder.getTrader());
                 qty = qty.subtract(matchOrder.getQty());
                 yourBook.remove(matchOrder.getId().toString());
                 matchOrder.getTrader().getAssociatedOrders().remove(matchOrder);
@@ -158,7 +168,7 @@ public class MatchingEngine {
 
             }
             else{
-                tradesToNotify.add(matchOrder.getTrader());
+                tradersToNotifyList.add(matchOrder.getTrader());
                 matchOrder.setQty(matchOrder.getQty().subtract(qty));
                 Trade trade = new Trade(matchOrder, qty, ++TRADEID);
                 Trade tradeForSender = new Trade(order, qty, ++TRADEID);
@@ -174,7 +184,7 @@ public class MatchingEngine {
             i++;
 
         }
-        return tradesToNotify;
+        return tradersToNotifyList;
 
 
     }
@@ -208,5 +218,18 @@ public class MatchingEngine {
     }
 
 
+    @Override
+    public void run() {
+        while(true){
+            try {
+                findMatch(this.orderBlockingQueue.take());
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }
 
