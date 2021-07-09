@@ -145,20 +145,17 @@ public class MatchingEngine {
                 matchOrder.getTrader().getAssociatedOrders().remove(matchOrder);
                 Trade trade = new Trade(matchOrder, matchOrder.getQty(), ++TRADEID);
                 matchOrder.getTrader().getAssociatedTrades().add(trade);
-                sendTradeAndOrders(matchOrder);
+
                 Trade tradeSender = new Trade(order, matchOrder.getQty(), ++TRADEID);
                 order.setQty(qty);
                 order.getTrader().getAssociatedTrades().add(tradeSender);
 
                 if(qty.compareTo(BigDecimal.valueOf(0)) == 0 ){
                     endMatching(instrument, order);
-                    sendTradeAndOrders(order);
+
                     break;
                 }
-                if(i == length-1){
 
-                    sendTradeAndOrders(order);
-                }
             }
             else{
                 tradesToNotify.add(matchOrder.getTrader());
@@ -170,9 +167,7 @@ public class MatchingEngine {
                 othersBook.remove(order.getId().toString());
                 order.getTrader().getAssociatedOrders().remove(order);
 
-                SenderSSE.SendMarketSnapshot(JSONConstructor.makeJSONMarketSnapshot(instrumentMap), traderHashMap.values());
-                sendTradeAndOrders(order);
-                sendTradeAndOrders(matchOrder);
+
                 break;
             }
 
@@ -191,13 +186,9 @@ public class MatchingEngine {
             instrument.getBookBuy().remove(order.getId().toString());
 
         order.getTrader().getAssociatedOrders().remove(order);
-        SenderSSE.SendMarketSnapshot(JSONConstructor.makeJSONMarketSnapshot(instrumentMap), traderHashMap.values());
     }
 
-    private void sendTradeAndOrders(Order order) throws JsonProcessingException {
-        order.getTrader().sendOrderEvent("receiveTrades" , constructTrades(order.getTrader()));
-        order.getTrader().sendOrderEvent("receiveOrders" , JSONConstructor.getOnesOrders(order.getTrader()));
-    }
+
 
 
     public JSONObject constructTrades(Trader trader){

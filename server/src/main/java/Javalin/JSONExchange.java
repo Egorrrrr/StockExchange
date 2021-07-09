@@ -51,8 +51,8 @@ public class JSONExchange {
 
         ArrayList<Trader> tradersToNotify = engine.processNewOrder(order);
 
-        SenderSSE.SendMarketSnapshot(JSONConstructor.makeJSONMarketSnapshot(instrumentHashMap), traderHashMap.values());
         order.getTrader().sendOrderEvent("receiveOrders" , JSONConstructor.getOnesOrders(order.getTrader()));
+        SenderSSE.SendMarketSnapshot(JSONConstructor.makeJSONMarketSnapshot(instrumentHashMap), traderHashMap.values());
         sendTradeAndOrders(tradersToNotify);
 
     }
