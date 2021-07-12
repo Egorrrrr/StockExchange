@@ -4,8 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import exchange.MatchingEngine;
 import exchange.beans.Trader;
 import io.javalin.http.sse.SseClient;
+import org.eclipse.jetty.server.RequestLog;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 
 public class Notifier implements Runnable {
@@ -30,7 +32,7 @@ public class Notifier implements Runnable {
     }
 
 
-    private void sendTradeAndOrders(ArrayList<Trader> tradersToNotify) throws JsonProcessingException {
+    private void sendTradeAndOrders(Collection<Trader> tradersToNotify) throws JsonProcessingException {
         for (Trader trader: tradersToNotify
         ) {
             for (SseClient sse: clientMap.get(trader)

@@ -7,10 +7,11 @@ import exchange.beans.Trader;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class JSONConstructor {
 
-    public static JSONObject makeJSONMarketSnapshot(HashMap<String, Instrument> instrumentMap){
+    public static JSONObject makeJSONMarketSnapshot(ConcurrentHashMap<String, Instrument> instrumentMap){
 
         JSONObject entireSnapshot = new JSONObject();
         JSONObject instruments = new JSONObject();

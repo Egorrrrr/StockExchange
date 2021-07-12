@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class OrderEntryGateway {
 
@@ -25,10 +26,9 @@ public class OrderEntryGateway {
     }
 
 
-    private HashMap<String, Instrument> readInstrumentsFromInputStream(InputStream inputStream)
+    private ConcurrentHashMap<String, Instrument> readInstrumentsFromInputStream(InputStream inputStream)
             throws IOException {
-        HashMap<String, Instrument> instrumentHashMap = new HashMap<>();
-        StringBuilder resultStringBuilder = new StringBuilder();
+        ConcurrentHashMap<String, Instrument> instrumentHashMap = new ConcurrentHashMap<>();
         try (BufferedReader br
                      = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
@@ -54,8 +54,8 @@ public class OrderEntryGateway {
 
         //считываем файл с инструментами и зансим их в словарь в классе ExchangeComponents.MatchingEngine
         InputStream instrumentFile = new FileInputStream("src/main/java/ins.txt");
-        HashMap<String, Instrument> instrumentHashMap = readInstrumentsFromInputStream(instrumentFile);
-        MatchingEngine matchingEngine = new MatchingEngine(instrumentHashMap,traderMap, traderBySseCode);
+        ConcurrentHashMap<String, Instrument> instrumentHashMap = readInstrumentsFromInputStream(instrumentFile);
+        MatchingEngine matchingEngine = new MatchingEngine(instrumentHashMap,traderMap);
         Notifier notifier = new Notifier(traderSSEClientMap, matchingEngine);
         JSONExchange jsonExchange = new JSONExchange(matchingEngine, traderBySseCode, instrumentHashMap, traderMap, traderSSEClientMap);
 

@@ -13,13 +13,14 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class JSONExchange {
 
     private MatchingEngine engine;
     private HashMap<String, Trader> traderBySseCodeMap;
-    private HashMap<String, Instrument> instrumentHashMap;
+    private ConcurrentHashMap<String, Instrument> instrumentHashMap;
     private HashMap<String, Trader> traderHashMap;
     private HashMap<Trader, ArrayList<SseClient>> traderSSEClientMap;
 
@@ -27,13 +28,13 @@ public class JSONExchange {
 
     public JSONExchange(MatchingEngine matchingEngine,
                         HashMap<String, Trader> traderBySseCodeMap,
-                        HashMap<String, Instrument> map,
+                        ConcurrentHashMap<String, Instrument> instrumentHashMap,
                         HashMap<String, Trader> traderHashMap,
                         HashMap<Trader, ArrayList<SseClient>> traderSSEClientMap
     ){
         this.engine = matchingEngine;
         this.traderBySseCodeMap = traderBySseCodeMap;
-        this.instrumentHashMap = map;
+        this.instrumentHashMap = instrumentHashMap;
         this.traderHashMap = traderHashMap;
         this.traderSSEClientMap = traderSSEClientMap;
         objectMapper= new ObjectMapper();
@@ -41,14 +42,14 @@ public class JSONExchange {
 
     }
 
-    public void createOrderFromJSON(@NotNull Context ctx) throws JsonProcessingException {
+    public void createOrderFromJSON(@NotNull Context ctx) throws JsonProcessingException, InterruptedException {
 
 
         Order order = objectMapper.readerFor(Order.class).readValue(ctx.body());
         order.setTrader(traderBySseCodeMap.get(ctx.queryParam("code")));
         order.setInstrument(instrumentHashMap.get(order.getInstrument().getName()));
 
-        ArrayList<Trader> tradersToNotify = engine.processNewOrder(order);
+        engine.enqueueNewOrder(order);
 
         sendMarketSnapshot();
         //sendTradeAndOrders(tradersToNotify);

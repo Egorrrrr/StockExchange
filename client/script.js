@@ -37,7 +37,7 @@ function cancelOrder(e){
   var id = data.childNodes[0].innerHTML.substring(1, data.childNodes[0].length)
   var instr = data.childNodes[1].innerHTML
   var side = data.childNodes[2].innerHTML  
-  fetch(IP+"/order-cancel-request",{
+  fetch(IP+"/order-cancel-request?" + "code="+code ,{
     method: 'POST',
     body:JSON.stringify({code: code, side:side, instrument:instr, id:id})
   })
