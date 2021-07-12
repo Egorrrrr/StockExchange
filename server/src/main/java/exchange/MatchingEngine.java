@@ -5,9 +5,6 @@ import exchange.beans.Order;
 import exchange.beans.Trade;
 import exchange.beans.Trader;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.javalin.http.Context;
-import org.eclipse.jetty.http.HttpStatus;
-import org.eclipse.jetty.server.RequestLog;
 import org.json.JSONObject;
 
 import java.math.BigDecimal;
@@ -48,6 +45,7 @@ public class MatchingEngine implements Runnable{
     public ArrayList<Trader> processNewOrder(Order order) throws JsonProcessingException {
 
     Trader temp = order.getTrader();
+    order.setTime(System.currentTimeMillis());
     OFFERID++;
     order.setId(OFFERID);
     temp.getAssociatedOrders().add(order);
@@ -126,7 +124,7 @@ public class MatchingEngine implements Runnable{
                 matchingOrders.add(orderToCheck);
             }
         }
-        matchingOrders.sort(new QtySorter());
+        matchingOrders.sort(new QtyTimeSorter());
         Collections.reverse(matchingOrders);
         int i = 0;
         int length = matchingOrders.toArray().length;

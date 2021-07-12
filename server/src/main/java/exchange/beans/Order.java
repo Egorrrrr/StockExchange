@@ -13,6 +13,16 @@ public class Order {
         return  this.instrument;
     }
 
+    private Long time;
+
+    public void setTime(Long time) {
+        this.time = time;
+    }
+
+    public Long getTime() {
+        return time;
+    }
+
     public void setInstrument(Instrument instrument) {
         this.instrument = instrument;
     }
